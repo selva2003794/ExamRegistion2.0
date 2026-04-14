@@ -281,13 +281,24 @@
 
             /* ===== RIGHT SIDE ===== */
 
-            /* PHOTO */
+            let photoLoaded = false;
             let img = new Image();
+            img.onload = function () {
+                photoLoaded = true;
+                addPhotoAndFinalize(doc, img, user);
+            };
+            img.onerror = function () {
+                photoLoaded = false;
+                addPhotoAndFinalize(doc, null, user);
+            };
             img.src = user.photo;
 
-            img.onload = function () {
-
-                doc.addImage(img, 'JPEG', 150, 40, 40, 40);
+            function addPhotoAndFinalize(doc, img, user) {
+                if (photoLoaded && img) {
+                    doc.addImage(img, 'JPEG', 150, 40, 40, 40);
+                } else {
+                    doc.text("No Photo", 150, 50);
+                }
 
                 /* SIGNATURE BOX */
                 doc.rect(150, 85, 40, 20);
@@ -341,8 +352,7 @@
 
                 /* SAVE */
                 doc.save(user.exam + "_HallTicket.pdf");
-
-            };
+            }
 
         }
 
