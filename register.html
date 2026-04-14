@@ -289,10 +289,24 @@
             function readFileAsDataURL(file) {
                 return new Promise((resolve, reject) => {
                     const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = () => reject(new Error('Error reading photo'));
+                    let timer = setTimeout(() => {
+                        reader.abort();
+                        reject(new Error('File reading timed out. Please try a smaller image file.'));
+                    }, 15000);
+
+                    reader.onload = () => {
+                        clearTimeout(timer);
+                        resolve(reader.result);
+                    };
+                    reader.onerror = () => {
+                        clearTimeout(timer);
+                        reject(new Error('Error reading photo'));
+                    };
+                    reader.onabort = () => {
+                        clearTimeout(timer);
+                        reject(new Error('File read aborted. Please try again.'));
+                    };
                     reader.readAsDataURL(file);
-                    setTimeout(() => reject(new Error('File reading timed out. Please try a smaller image file.')), 15000);
                 });
             }
 
@@ -311,7 +325,13 @@
                     img.src = photo;
                 });
 
-                let data = JSON.parse(localStorage.getItem("data")) || [];
+                let data;
+                try {
+                    data = JSON.parse(localStorage.getItem("data")) || [];
+                } catch (parseError) {
+                    console.warn('Corrupted data storage, resetting data array.', parseError);
+                    data = [];
+                }
 
                 let userData = {
                     name, email, exam, age, mobile, status, category, photo,
@@ -325,12 +345,17 @@
 
                 showSuccess("Registered Successfully!");
             } catch (error) {
+                console.error('Register error:', error);
                 if (error.message.includes('timed out')) {
                     fail(error.message);
                 } else if (error.message.includes('Invalid or corrupted')) {
                     fail("Invalid or corrupted image file. Please upload a valid image.");
+                } else if (error.message.includes('aborted')) {
+                    fail("Photo upload was interrupted. Please try again.");
+                } else if (error instanceof SyntaxError) {
+                    fail("Stored registration data is invalid. Please refresh the page and try again.");
                 } else {
-                    fail(`Error reading photo. Please try a different image file. ${error.message , error}`);
+                    fail("An unexpected error occurred while uploading the photo. Please try again.");
                 }
             }
         }
