@@ -173,7 +173,7 @@
             <option>Advance</option>
         </select>
 
-        <input type="file" id="photo" accept="image/*" title="Upload your photo">
+        <input type="file" id="photo" title="Upload your photo">
 
         <button id="submitBtn" onclick="register()">Submit</button>
         <button class="leave" onclick="leave()">Cancel</button>
@@ -259,11 +259,8 @@
             }
 
             let file = photoInput.files[0];
-            if (!file.type.startsWith('image/')) {
-                return fail("Please upload a valid image file (JPG, PNG, etc.)");
-            }
-            if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                return fail("Image file too large. Maximum size is 5MB.");
+            if (file.size > 10 * 1024 * 1024) { // 10MB limit
+                return fail("Image file too large. Maximum size is 10MB.");
             }
 
             if (age < 18) {
@@ -292,6 +289,7 @@
                     reader.onload = () => resolve(reader.result);
                     reader.onerror = () => reject(new Error('Error reading photo'));
                     reader.readAsDataURL(file);
+                    setTimeout(() => reject(new Error('File reading timed out. Please try a smaller image file.')), 15000);
                 });
             }
 
@@ -312,7 +310,11 @@
 
                 showSuccess("Registered Successfully!");
             } catch (error) {
-                fail("Error reading photo. Please try a different image file.");
+                if (error.message.includes('timed out')) {
+                    fail(error.message);
+                } else {
+                    fail("Error reading photo. Please try a different image file.");
+                }
             }
         }
 
