@@ -333,10 +333,7 @@
             }
 
             function addPhotoAndFinalize(doc, img, user) {
-                // Check if user has a real photo (not the default SVG from login)
-                let hasValidPhoto = user.photo && !user.photo.includes('data:image/svg+xml');
-
-                if (photoLoaded && img && hasValidPhoto) {
+                if (photoLoaded && img) {
                     doc.addImage(img, 'JPEG', 150, 40, 40, 40);
                 } else {
                     doc.text("No Photo", 150, 50);
