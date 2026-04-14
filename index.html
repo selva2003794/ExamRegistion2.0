@@ -190,9 +190,11 @@
             }
 
             if (role == "Student" && p == "123") {
+                localStorage.setItem("studentLogin", "true");
                 window.location = "student.html";
             }
             else if (role == "Admin" && p == "admin123") {
+                localStorage.setItem("adminLogin", "true");
                 window.location = "admin.html";
             }
             else {

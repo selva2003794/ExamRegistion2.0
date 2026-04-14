@@ -201,9 +201,13 @@
 
     <script>
 
-        /* LOAD USER */
+        /* CHECK LOGIN SESSION */
         let user = JSON.parse(localStorage.getItem("currentUser"));
+        if (!user) {
+            window.location = "index.html";
+        }
 
+        /* LOAD USER */
         if (user) {
             document.getElementById("userPhoto").src = user.photo;
             document.getElementById("userName").innerText = user.name;
@@ -218,6 +222,8 @@
         /* LOGOUT */
         function logout() {
             localStorage.removeItem("currentUser");
+            localStorage.removeItem("studentLogin");
+            localStorage.removeItem("adminLogin");
             window.location = "index.html";
         }
 

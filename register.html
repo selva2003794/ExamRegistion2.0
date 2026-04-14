@@ -191,6 +191,12 @@
 
     <script>
 
+        /* CHECK LOGIN SESSION */
+        let currentUser = JSON.parse(localStorage.getItem("currentUser"));
+        if (!currentUser) {
+            window.location = "index.html";
+        }
+
         let exam = localStorage.getItem("exam");
         document.getElementById("examName").innerText = "Exam: " + exam;
 
@@ -231,99 +237,142 @@
             btn.classList.add("loading");
             btn.innerText = "Processing...";
 
-            let name = document.getElementById("name").value.trim();
-            let email = document.getElementById("email").value.trim();
-            let age = document.getElementById("age").value;
-            let mobile = document.getElementById("mobile").value.trim();
-            let status = document.getElementById("status").value;
             let photoInput = document.getElementById("photo");
-            let dob = document.getElementById("dob").value;
-            let gender = document.getElementById("gender").value;
-            let centre = document.getElementById("centre").value;
-            let address = document.getElementById("address").value;
 
-            let category = "";
-
-            /* FIX: ensure button resets on error */
-            function fail(msg) {
-                showError(msg);
-                return;
-            }
-
-            if (!name || !email || !age || !mobile || !status || !centre) {
-                return fail("Fill all fields");
-            }
-
-            if (photoInput.files.length == 0) {
-                return fail("Upload photo");
-            }
-
-            let file = photoInput.files[0];
-            if (!file.type.startsWith('image/')) {
-                return fail("Please upload a valid image file (JPG, PNG, etc.)");
-            }
-            if (file.size > 10 * 1024 * 1024) { // 10MB limit
-                return fail("Image file too large. Maximum size is 10MB.");
-            }
-
-            if (age < 18) {
-                return fail("Must be 18+");
-            }
-
-            if (exam == "GOVT") {
-                category = document.getElementById("category").value;
-                if (!category) return fail("Select category");
-            }
-
-            if (exam == "JEE") {
-                category = document.getElementById("jeeCategory").value;
-                if (!category) return fail("Select category");
-            }
-
-            if (exam == "NEET") {
-                category = document.getElementById("neetCategory").value;
-                if (!category) return fail("Select category");
-            }
-
-            // Helper function to read file as Data URL
-            function readFileAsDataURL(file) {
-                return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    let timer = setTimeout(() => {
-                        reader.abort();
-                        reject(new Error('File reading timed out. Please try a smaller image file.'));
-                    }, 15000);
-
-                    reader.onload = () => {
-                        clearTimeout(timer);
-                        resolve(reader.result);
-                    };
-                    reader.onerror = () => {
-                        clearTimeout(timer);
-                        reject(new Error('Error reading photo'));
-                    };
-                    reader.onabort = () => {
-                        clearTimeout(timer);
-                        reject(new Error('File read aborted. Please try again.'));
-                    };
-                    reader.readAsDataURL(file);
-                });
-            }
-
+            /* CHECK IMAGE FIRST - COMPREHENSIVE VALIDATION */
             try {
-                let photo = await readFileAsDataURL(photoInput.files[0]);
+                if (photoInput.files.length == 0) {
+                    return fail("Upload photo");
+                }
+
+                let file = photoInput.files[0];
+                
+                if (!file) {
+                    return fail("No file selected. Please try again.");
+                }
+
+                if (!file.type) {
+                    return fail("Unable to determine file type. Please try a different image.");
+                }
+
+                if (!file.type.startsWith('image/')) {
+                    return fail("Please upload a valid image file (JPG, PNG, etc.)");
+                }
+
+                if (file.size === 0) {
+                    return fail("Image file is empty. Please upload a valid image.");
+                }
+
+                if (file.size > 10 * 1024 * 1024) {
+                    return fail("Image file too large. Maximum size is 10MB.");
+                }
+
+                // Helper function to read file as Data URL
+                function readFileAsDataURL(file) {
+                    return new Promise((resolve, reject) => {
+                        const reader = new FileReader();
+                        let timer = setTimeout(() => {
+                            reader.abort();
+                            reject(new Error('File reading timed out. Please try a smaller image file.'));
+                        }, 15000);
+
+                        reader.onload = () => {
+                            clearTimeout(timer);
+                            resolve(reader.result);
+                        };
+                        reader.onerror = () => {
+                            clearTimeout(timer);
+                            reject(new Error('Error reading photo'));
+                        };
+                        reader.onabort = () => {
+                            clearTimeout(timer);
+                            reject(new Error('File read aborted. Please try again.'));
+                        };
+                        reader.readAsDataURL(file);
+                    });
+                }
+
+                let photo = await readFileAsDataURL(file);
+
+                if (!photo) {
+                    return fail("Photo data is empty. Please try another image.");
+                }
 
                 if (!photo.startsWith('data:image/')) {
                     return fail("Invalid image file. Please upload a valid image (JPG, PNG, etc.).");
                 }
 
                 // Validate that the image can be loaded
-                await new Promise((resolve, reject) => {
+                let imageValid = await new Promise((resolve, reject) => {
                     let img = new Image();
-                    img.onload = resolve;
-                    img.onerror = () => reject(new Error('Invalid or corrupted image file'));
+                    let timeout = setTimeout(() => {
+                        reject(new Error('Image validation timed out'));
+                    }, 5000);
+                    
+                    img.onload = () => {
+                        clearTimeout(timeout);
+                        resolve(true);
+                    };
+                    img.onerror = () => {
+                        clearTimeout(timeout);
+                        reject(new Error('Invalid or corrupted image file'));
+                    };
                     img.src = photo;
                 });
+
+                /* NOW CHECK OTHER FORM FIELDS */
+                let name = document.getElementById("name").value.trim();
+                let email = document.getElementById("email").value.trim();
+                let age = document.getElementById("age").value;
+                let mobile = document.getElementById("mobile").value.trim();
+                let status = document.getElementById("status").value;
+                let dob = document.getElementById("dob").value;
+                let gender = document.getElementById("gender").value;
+                let centre = document.getElementById("centre").value;
+                let address = document.getElementById("address").value;
+
+                if (!name || !email || !age || !mobile || !status || !centre) {
+                    return fail("Fill all fields");
+                }
+
+                if (name.length < 3) {
+                    return fail("Name must be at least 3 characters");
+                }
+
+                if (!email.includes("@")) {
+                    return fail("Enter a valid email address");
+                }
+
+                if (age < 18 || age > 100) {
+                    return fail("Age must be between 18 and 100");
+                }
+
+                if (mobile.length < 10) {
+                    return fail("Mobile number must be at least 10 digits");
+                }
+
+                if (!dob) {
+                    return fail("Please select your date of birth");
+                }
+
+                if (!gender) {
+                    return fail("Please select your gender");
+                }
+
+                let category = "";
+
+                if (exam == "GOVT") {
+                    category = document.getElementById("category").value;
+                    if (!category) return fail("Select GOVT category");
+                }
+                else if (exam == "JEE") {
+                    category = document.getElementById("jeeCategory").value;
+                    if (!category) return fail("Select JEE category");
+                }
+                else if (exam == "NEET") {
+                    category = document.getElementById("neetCategory").value;
+                    if (!category) return fail("Select NEET category");
+                }
 
                 let data;
                 try {
@@ -344,18 +393,29 @@
                 localStorage.setItem("currentUser", JSON.stringify(userData));
 
                 showSuccess("Registered Successfully!");
+
             } catch (error) {
                 console.error('Register error:', error);
+                resetBtn();
+
                 if (error.message.includes('timed out')) {
                     fail(error.message);
                 } else if (error.message.includes('Invalid or corrupted')) {
                     fail("Invalid or corrupted image file. Please upload a valid image.");
                 } else if (error.message.includes('aborted')) {
                     fail("Photo upload was interrupted. Please try again.");
+                } else if (error.message.includes('not allowed')) {
+                    fail("File access denied. Please try a different image.");
+                } else if (error.message.includes('NotReadableError')) {
+                    fail("Cannot read the selected file. It may be in use or inaccessible.");
+                } else if (error instanceof TypeError) {
+                    fail("An unexpected type error occurred. Please refresh and try again.");
                 } else if (error instanceof SyntaxError) {
-                    fail("Stored registration data is invalid. Please refresh the page and try again.");
+                    fail("Data format error. Please refresh the page and try again.");
+                } else if (error instanceof RangeError) {
+                    fail("The photo data is too large. Please try a smaller image.");
                 } else {
-                    fail("An unexpected error occurred while uploading the photo. Please try again.");
+                    fail("An unexpected error occurred: " + error.message);
                 }
             }
         }

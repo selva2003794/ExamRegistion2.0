@@ -197,6 +197,12 @@ table{display:block;overflow-x:auto;}
 
 <script>
 
+/* CHECK LOGIN SESSION - ADMIN ONLY */
+let adminSessionValid = localStorage.getItem("adminLogin");
+if (!adminSessionValid) {
+    window.location = "index.html";
+}
+
 let data = JSON.parse(localStorage.getItem("data")) || [];
 let table = document.getElementById("table");
 
@@ -281,6 +287,9 @@ link.click();
 }
 
 function logout(){
+localStorage.removeItem("adminLogin");
+localStorage.removeItem("studentLogin");
+localStorage.removeItem("currentUser");
 window.location="index.html";
 }
 
