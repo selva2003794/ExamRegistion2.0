@@ -330,7 +330,7 @@
                 } else if (error.message.includes('Invalid or corrupted')) {
                     fail("Invalid or corrupted image file. Please upload a valid image.");
                 } else {
-                    fail("Error reading photo. Please try a different image file.");
+                    fail(`Error reading photo. Please try a different image file. ${error.message , error}`);
                 }
             }
         }

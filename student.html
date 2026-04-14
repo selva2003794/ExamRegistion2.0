@@ -221,6 +221,24 @@
             window.location = "index.html";
         }
 
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function getDefaultExamTime() {
+            let start = new Date();
+            start.setHours(9, 0, 0, 0);
+            let end = new Date();
+            end.setHours(12, 0, 0, 0);
+            return `${formatTime(start)} - ${formatTime(end)}`;
+        }
+
+        function getDefaultReportingTime() {
+            let reporting = new Date();
+            reporting.setHours(7, 30, 0, 0);
+            return formatTime(reporting);
+        }
+
         /* HALL TICKET PDF */
         async function downloadHallTicket() {
 
@@ -274,8 +292,8 @@
             row("Category", user.category || "General");
             row("Exam Name", user.exam);
             row("Exam Date", user.examDate || "10-05-2026");
-            row("Exam Time", user.examTime || "9:00 AM - 12:00 PM");
-            row("Reporting Time", user.reporting || "7:30 AM");
+            row("Exam Time", user.examTime || getDefaultExamTime());
+            row("Reporting Time", user.reporting || getDefaultReportingTime());
             row("Duration", "3 Hours");
             row("Subject", user.subject || "Physics/Chemistry/Math");
 
