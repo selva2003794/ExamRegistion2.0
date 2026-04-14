@@ -421,8 +421,10 @@
                     fail("Data format error. Please refresh the page and try again.");
                 } else if (error instanceof RangeError) {
                     fail("The photo data is too large. Please try a smaller image.");
+                } else if (error.message && error.message.includes('quota')) {
+                    fail("Storage limit exceeded. Please try a smaller image file or clear your browser data.");
                 } else {
-                    fail("An unexpected error occurred: " + error.message);
+                    fail("An unexpected error occurred. Please try again.");
                 }
             }
         }
