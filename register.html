@@ -278,9 +278,10 @@
             }
 
             let reader = new FileReader();
+            let loaded = false;
 
             reader.onload = function () {
-
+                loaded = true;
                 let photo = reader.result;
 
                 let data = JSON.parse(localStorage.getItem("data")) || [];
@@ -300,8 +301,16 @@
 
             /* FIX: handle file read error */
             reader.onerror = function () {
+                loaded = true; // prevent timeout
                 fail("Error reading photo");
             };
+
+            // Timeout in case file reading takes too long or fails silently
+            setTimeout(() => {
+                if (!loaded) {
+                    fail("File reading timed out. Please try a smaller image file.");
+                }
+            }, 10000); // 10 seconds timeout
 
             reader.readAsDataURL(photoInput.files[0]);
         }
