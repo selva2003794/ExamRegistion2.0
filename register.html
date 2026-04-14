@@ -173,7 +173,7 @@
             <option>Advance</option>
         </select>
 
-        <input type="file" id="photo" title="Upload your photo">
+        <input type="file" id="photo" accept="image/*" title="Upload your photo">
 
         <button id="submitBtn" onclick="register()">Submit</button>
         <button class="leave" onclick="leave()">Cancel</button>
@@ -259,6 +259,9 @@
             }
 
             let file = photoInput.files[0];
+            if (!file.type.startsWith('image/')) {
+                return fail("Please upload a valid image file (JPG, PNG, etc.)");
+            }
             if (file.size > 10 * 1024 * 1024) { // 10MB limit
                 return fail("Image file too large. Maximum size is 10MB.");
             }
@@ -296,6 +299,18 @@
             try {
                 let photo = await readFileAsDataURL(photoInput.files[0]);
 
+                if (!photo.startsWith('data:image/')) {
+                    return fail("Invalid image file. Please upload a valid image (JPG, PNG, etc.).");
+                }
+
+                // Validate that the image can be loaded
+                await new Promise((resolve, reject) => {
+                    let img = new Image();
+                    img.onload = resolve;
+                    img.onerror = () => reject(new Error('Invalid or corrupted image file'));
+                    img.src = photo;
+                });
+
                 let data = JSON.parse(localStorage.getItem("data")) || [];
 
                 let userData = {
@@ -312,6 +327,8 @@
             } catch (error) {
                 if (error.message.includes('timed out')) {
                     fail(error.message);
+                } else if (error.message.includes('Invalid or corrupted')) {
+                    fail("Invalid or corrupted image file. Please upload a valid image.");
                 } else {
                     fail("Error reading photo. Please try a different image file.");
                 }
