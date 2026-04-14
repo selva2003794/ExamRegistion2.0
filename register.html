@@ -243,10 +243,30 @@
         }
 
         let isSubmitting = false;
+        
+        /* PREVENT RELOAD WHILE PROCESSING */
         window.addEventListener('beforeunload', (e) => {
             if (isSubmitting) {
                 e.preventDefault();
                 e.returnValue = 'Registration is in progress. Please wait!';
+            }
+        });
+        
+        /* PREVENT F5 AND CTRL+R */
+        document.addEventListener('keydown', (e) => {
+            if (isSubmitting) {
+                if ((e.key === 'F5') || (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.key === 'R')) {
+                    e.preventDefault();
+                    alert('Cannot refresh while registration is in progress!');
+                }
+            }
+        });
+        
+        /* PREVENT TAB CLOSE (CTRL+W) */
+        window.addEventListener('keydown', (e) => {
+            if (isSubmitting && e.ctrlKey && (e.key === 'w' || e.key === 'W')) {
+                e.preventDefault();
+                alert('Cannot close tab while registration is in progress!');
             }
         });
 

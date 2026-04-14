@@ -176,16 +176,46 @@
 
     <script>
 
+        let isLoggingIn = false;
+        
+        /* PREVENT RELOAD WHILE LOGGING IN */
+        window.addEventListener('beforeunload', (e) => {
+            if (isLoggingIn) {
+                e.preventDefault();
+                e.returnValue = 'Login is in progress. Please wait!';
+            }
+        });
+        
+        /* PREVENT F5 AND CTRL+R */
+        document.addEventListener('keydown', (e) => {
+            if (isLoggingIn) {
+                if ((e.key === 'F5') || (e.ctrlKey && e.key === 'r') || (e.ctrlKey && e.key === 'R')) {
+                    e.preventDefault();
+                    alert('Cannot refresh while login is in progress!');
+                }
+            }
+        });
+        
+        /* PREVENT TAB CLOSE (CTRL+W) */
+        window.addEventListener('keydown', (e) => {
+            if (isLoggingIn && e.ctrlKey && (e.key === 'w' || e.key === 'W')) {
+                e.preventDefault();
+                alert('Cannot close tab while login is in progress!');
+            }
+        });
+
         function login() {
 
             let btn = document.getElementById("loginBtn");
             btn.classList.add("loading");
             btn.innerText = "Checking...";
+            isLoggingIn = true;
 
             let role = document.getElementById('role').value;
             let p = document.getElementById('pass').value;
 
             if (!role || !p) {
+                isLoggingIn = false;
                 return showError("Fill all fields");
             }
 
@@ -198,6 +228,7 @@
                 window.location = "admin.html";
             }
             else {
+                isLoggingIn = false;
                 showError("Invalid Login");
             }
         }
@@ -218,6 +249,7 @@
             let btn = document.getElementById("loginBtn");
             btn.classList.remove("loading");
             btn.innerText = "Login";
+            isLoggingIn = false;
         }
 
     </script>
