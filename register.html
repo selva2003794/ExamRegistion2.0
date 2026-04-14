@@ -92,6 +92,45 @@
             pointer-events: none;
         }
 
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         .modal {
             display: none;
             position: fixed;
@@ -180,6 +219,12 @@
 
     </div>
 
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Processing...</div>
+    </div>
+
     <!-- MODAL -->
     <div id="modal" class="modal">
         <div class="modal-box">
@@ -196,6 +241,14 @@
         if (!currentUser) {
             window.location = "index.html";
         }
+
+        let isSubmitting = false;
+        window.addEventListener('beforeunload', (e) => {
+            if (isSubmitting) {
+                e.preventDefault();
+                e.returnValue = 'Registration is in progress. Please wait!';
+            }
+        });
 
         let exam = localStorage.getItem("exam");
         document.getElementById("examName").innerText = "Exam: " + exam;
@@ -232,6 +285,12 @@
 
         /* REGISTER */
         async function register() {
+
+            if (isSubmitting) return;
+            isSubmitting = true;
+
+            let overlay = document.getElementById("loadingOverlay");
+            overlay.classList.add("active");
 
             let btn = document.getElementById("submitBtn");
             btn.classList.add("loading");
@@ -393,8 +452,10 @@
                 localStorage.setItem("currentUser", JSON.stringify(userData));
 
                 showSuccess("Registered Successfully!");
+                isSubmitting = false;
 
             } catch (error) {
+                isSubmitting = false;
                 console.error('Register error:', error);
                 resetBtn();
 
@@ -437,9 +498,13 @@
         }
 
         function closeModal() {
+            let overlay = document.getElementById("loadingOverlay");
+            overlay.classList.remove("active");
             document.getElementById("modal").style.display = "none";
             if (document.getElementById("modalTitle").innerText == "Success") {
-                window.location = "student.html";
+                setTimeout(() => {
+                    window.location = "student.html";
+                }, 500);
             }
             resetBtn();
         }

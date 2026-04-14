@@ -137,6 +137,45 @@
             transform: scale(1.1);
         }
 
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        .loading-overlay.active {
+            display: flex;
+        }
+
+        .spinner {
+            border: 5px solid rgba(255, 255, 255, 0.3);
+            border-top: 5px solid white;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: white;
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
         /* MOBILE */
         @media(max-width:600px) {
             .cards {
@@ -166,6 +205,12 @@
     </div>
 
     <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <!-- LOADING OVERLAY -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Generating PDF...</div>
+    </div>
 
     <div class="container">
 
@@ -206,6 +251,14 @@
         if (!user) {
             window.location = "index.html";
         }
+
+        let isProcessing = false;
+        window.addEventListener('beforeunload', (e) => {
+            if (isProcessing) {
+                e.preventDefault();
+                e.returnValue = 'Processing is in progress. Please wait!';
+            }
+        });
 
         /* LOAD USER */
         if (user) {
@@ -248,17 +301,28 @@
         /* HALL TICKET PDF */
         async function downloadHallTicket() {
 
-            let user = JSON.parse(localStorage.getItem("currentUser"));
-            if (!user) {
-                alert("Register first!");
-                return;
-            }
+            if (isProcessing) return;
+            isProcessing = true;
 
-            const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
-            if (!jsPDF) {
-                alert("Failed to load jsPDF. Please check your internet connection or script source.");
-                return;
-            }
+            let overlay = document.getElementById("loadingOverlay");
+            overlay.classList.add("active");
+
+            try {
+                let user = JSON.parse(localStorage.getItem("currentUser"));
+                if (!user) {
+                    alert("Register first!");
+                    isProcessing = false;
+                    overlay.classList.remove("active");
+                    return;
+                }
+
+                const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+                if (!jsPDF) {
+                    alert("Failed to load jsPDF. Please check your internet connection or script source.");
+                    isProcessing = false;
+                    overlay.classList.remove("active");
+                    return;
+                }
 
             let doc = new jsPDF();
 
@@ -316,6 +380,13 @@
                 addPhotoAndFinalize(doc, null, user);
             };
             img.src = user.photo;
+
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                isProcessing = false;
+                overlay.classList.remove("active");
+                alert('Error generating PDF. Please try again.');
+            }
 
             function addPhotoAndFinalize(doc, img, user) {
                 if (photoLoaded && img) {
@@ -376,6 +447,9 @@
 
                 /* SAVE */
                 doc.save(user.exam + "_HallTicket.pdf");
+
+                isProcessing = false;
+                overlay.classList.remove("active");
             }
 
         }
