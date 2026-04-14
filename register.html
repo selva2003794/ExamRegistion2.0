@@ -173,7 +173,7 @@
             <option>Advance</option>
         </select>
 
-        <input type="file" id="photo" accept="image/*">
+        <input type="file" id="photo" accept="image/*" title="Upload your photo">
 
         <button id="submitBtn" onclick="register()">Submit</button>
         <button class="leave" onclick="leave()">Cancel</button>
@@ -256,6 +256,14 @@
 
             if (photoInput.files.length == 0) {
                 return fail("Upload photo");
+            }
+
+            let file = photoInput.files[0];
+            if (!file.type.startsWith('image/')) {
+                return fail("Please upload a valid image file (JPG, PNG, etc.)");
+            }
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                return fail("Image file too large. Maximum size is 5MB.");
             }
 
             if (age < 18) {
