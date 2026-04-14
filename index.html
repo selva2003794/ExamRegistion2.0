@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Login</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            padding-top: 80px; /* fix header overlap */
+        }
+
+        /* HEADER */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+        }
+
+        /* LOGIN BOX */
+        .box {
+            width: 90%;
+            max-width: 400px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 40px;
+            border-radius: 20px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 0.6s ease;
+        }
+
+        /* ANIMATION */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h2 {
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus {
+            transform: scale(1.03);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        /* MODAL */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: white;
+            color: black;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            width: 300px;
+        }
+
+        .modal-box button {
+            background: #4CAF50;
+            margin-top: 15px;
+        }
+
+        @media(max-width:600px) {
+            .box {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🎓 Exam Registration Portal</div>
+
+    <div class="box">
+
+        <h2>Welcome</h2>
+
+        <div class="input-group">
+            <select id="role">
+                <option value="">Select Role</option>
+                <option value="Student">Student</option>
+                <option value="Admin">Admin</option>
+            </select>
+        </div>
+
+        <div class="input-group">
+            <input type="password" id="pass" placeholder="Enter Password">
+        </div>
+
+        <button id="loginBtn" onclick="login()">Login</button>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <button onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+
+        function login() {
+
+            let btn = document.getElementById("loginBtn");
+            btn.classList.add("loading");
+            btn.innerText = "Checking...";
+
+            let role = document.getElementById('role').value;
+            let p = document.getElementById('pass').value;
+
+            if (!role || !p) {
+                return showError("Fill all fields");
+            }
+
+            if (role == "Student" && p == "123") {
+                window.location = "student.html";
+            }
+            else if (role == "Admin" && p == "admin123") {
+                window.location = "admin.html";
+            }
+            else {
+                showError("Invalid Login");
+            }
+        }
+
+        function showError(msg) {
+            resetBtn();
+            document.getElementById("modalTitle").innerText = "Login Failed";
+            document.getElementById("modalMessage").innerText = msg;
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+            resetBtn();
+        }
+
+        function resetBtn() {
+            let btn = document.getElementById("loginBtn");
+            btn.classList.remove("loading");
+            btn.innerText = "Login";
+        }
+
+    </script>
+
+</body>
+
+</html>

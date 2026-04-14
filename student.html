@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Student Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+
+    <!-- PDF LIB -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* BACKGROUND */
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            min-height: 100vh;
+        }
+
+        /* HEADER */
+        .header {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            font-size: 22px;
+            font-weight: bold;
+            z-index: 10;
+        }
+
+        /* PROFILE */
+        .profile {
+            position: absolute;
+            top: 80px;
+            left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 15px;
+            border-radius: 50px;
+            backdrop-filter: blur(10px);
+        }
+
+        .profile img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid white;
+        }
+
+        /* LOGOUT */
+        .logout-btn {
+            position: absolute;
+            top: 90px;
+            right: 20px;
+            padding: 10px 15px;
+            background: #ff4b5c;
+            border: none;
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .logout-btn:hover {
+            background: #ff1f3d;
+            transform: scale(1.05);
+        }
+
+        /* MAIN */
+        .container {
+            margin-top: 150px;
+            text-align: center;
+        }
+
+        /* TITLE */
+        h2 {
+            font-weight: 500;
+            margin-bottom: 30px;
+        }
+
+        /* CARDS */
+        .cards {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .card {
+            width: 220px;
+            padding: 30px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            cursor: pointer;
+            transition: 0.4s;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+        }
+
+        .card:hover {
+            transform: translateY(-10px) scale(1.05);
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .card h3 {
+            margin-top: 10px;
+            font-size: 20px;
+        }
+
+        /* ICON */
+        .icon {
+            font-size: 40px;
+        }
+
+        /* BUTTON */
+        .download-btn {
+            margin-top: 40px;
+            padding: 12px 25px;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .download-btn:hover {
+            transform: scale(1.1);
+        }
+
+        /* MOBILE */
+        @media(max-width:600px) {
+            .cards {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .profile {
+                top: 70px;
+            }
+
+            .logout-btn {
+                top: 70px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="header">🎓 Exam Registration Portal</div>
+
+    <!-- PROFILE -->
+    <div class="profile">
+        <img id="userPhoto">
+        <span id="userName"></span>
+    </div>
+
+    <button class="logout-btn" onclick="logout()">Logout</button>
+
+    <div class="container">
+
+        <h2>Select Your Exam</h2>
+
+        <div class="cards">
+
+            <div class="card" onclick="go('JEE')">
+                <div class="icon">📘</div>
+                <h3>JEE</h3>
+                <p>Engineering Entrance</p>
+            </div>
+
+            <div class="card" onclick="go('NEET')">
+                <div class="icon">🧬</div>
+                <h3>NEET</h3>
+                <p>Medical Entrance</p>
+            </div>
+
+            <div class="card" onclick="go('GOVT')">
+                <div class="icon">🏛️</div>
+                <h3>GOVT</h3>
+                <p>Government Exams</p>
+            </div>
+
+        </div>
+
+        <button class="download-btn" onclick="downloadHallTicket()">
+            🎫 Download Hall Ticket
+        </button>
+
+    </div>
+
+    <script>
+
+        /* LOAD USER */
+        let user = JSON.parse(localStorage.getItem("currentUser"));
+
+        if (user) {
+            document.getElementById("userPhoto").src = user.photo;
+            document.getElementById("userName").innerText = user.name;
+        }
+
+        /* NAVIGATION */
+        function go(exam) {
+            localStorage.setItem("exam", exam);
+            window.location = "register.html";
+        }
+
+        /* LOGOUT */
+        function logout() {
+            window.location = "index.html";
+        }
+
+        /* HALL TICKET PDF */
+        async function downloadHallTicket() {
+
+            let user = JSON.parse(localStorage.getItem("currentUser"));
+            if (!user) {
+                alert("Register first!");
+                return;
+            }
+
+            const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
+            if (!jsPDF) {
+                alert("Failed to load jsPDF. Please check your internet connection or script source.");
+                return;
+            }
+
+            let doc = new jsPDF();
+
+            /* ===== HEADER ===== */
+            doc.setFillColor(41, 128, 185);
+            doc.rect(0, 0, 210, 25, 'F');
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.text("NATIONAL TESTING AGENCY (NTA)", 20, 15);
+
+            doc.setFontSize(12);
+            doc.text("EXAM HALL TICKET", 75, 22);
+
+            /* RESET COLOR */
+            doc.setTextColor(0, 0, 0);
+
+            /* BORDER */
+            doc.rect(5, 5, 200, 287);
+
+            /* ===== USER DETAILS ===== */
+            doc.setFontSize(11);
+
+            let y = 40;
+
+            function row(label, value) {
+                doc.text(label + ":", 15, y);
+                doc.text(value || "-", 80, y);
+                y += 8;
+            }
+
+            /* LEFT SIDE DETAILS */
+            row("Candidate Name", user.name);
+            row("Application No", user.appNo || "APP" + Math.floor(Math.random() * 100000));
+            row("Date of Birth", user.dob || "01-01-2000");
+            row("Gender", user.gender || "Male");
+            row("Category", user.category || "General");
+            row("Exam Name", user.exam);
+            row("Exam Date", user.examDate || "10-05-2026");
+            row("Exam Time", user.examTime || "9:00 AM - 12:00 PM");
+            row("Reporting Time", user.reporting || "7:30 AM");
+            row("Duration", "3 Hours");
+            row("Subject", user.subject || "Physics/Chemistry/Math");
+
+            /* ===== RIGHT SIDE ===== */
+
+            /* PHOTO */
+            let img = new Image();
+            img.src = user.photo;
+
+            img.onload = function () {
+
+                doc.addImage(img, 'JPEG', 150, 40, 40, 40);
+
+                /* SIGNATURE BOX */
+                doc.rect(150, 85, 40, 20);
+                doc.text("Candidate Sign", 152, 110);
+
+                /* CENTER DETAILS */
+                doc.setFontSize(11);
+
+                doc.text("Exam Centre:", 15, 150);
+                doc.text(user.centre || "ABC College", 15, 158);
+
+                doc.text("Address:", 15, 166);
+                doc.text(user.address || "Chennai, Tamil Nadu", 15, 174);
+
+                doc.text("Centre Code: " + (user.centreCode || "TN001"), 15, 182);
+                doc.text("Seat No: " + (user.seat || "A12"), 15, 190);
+
+                /* QR CODE (FAKE BOX) */
+                doc.rect(150, 150, 40, 40);
+                doc.text("QR", 165, 175);
+
+                /* ===== INSTRUCTIONS ===== */
+                doc.setFontSize(10);
+
+                doc.text("Instructions:", 15, 210);
+
+                let instructions = [
+                    "1. Carry hall ticket and valid ID proof.",
+                    "2. Reach centre before reporting time.",
+                    "3. No electronic devices allowed.",
+                    "4. Follow dress code (for NEET).",
+                    "5. No entry after gate closing time.",
+                    "6. Carry only allowed items.",
+                    "7. Follow invigilator instructions."
+                ];
+
+                let y2 = 218;
+                instructions.forEach(i => {
+                    doc.text(i, 15, y2);
+                    y2 += 6;
+                });
+
+                /* ===== FOOTER ===== */
+                doc.line(10, 260, 200, 260);
+
+                doc.text("Authorized Signature", 140, 270);
+                doc.line(140, 265, 190, 265);
+
+                doc.text("Helpline: 1800-123-456", 15, 270);
+                doc.text("Website: www.nta.ac.in", 15, 278);
+
+                /* SAVE */
+                doc.save(user.exam + "_HallTicket.pdf");
+
+            };
+
+        }
+
+    </script>
+
+</body>
+
+</html>

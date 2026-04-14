@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+font-family:Arial;
+text-align:center;
+background:linear-gradient(135deg,#f68fff,#fb7385);
+margin:0;
+padding:80px 20px 20px 20px;
+min-height:100vh
+}
+
+h2{
+color:#fff;
+margin-bottom:20px;
+}
+
+/* HEADER */
+.header{
+background: linear-gradient(45deg, #667eea, #764ba2);
+color: white;
+padding: 20px;
+position: fixed;
+top: 0;
+left: 0;
+width: 100%;
+z-index: 10;
+font-size: medium;
+font-weight: bold;
+}
+
+/* CONTROLS */
+.controls{
+margin-bottom:20px;
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:10px;
+}
+
+input, select{
+padding:10px;
+border-radius:5px;
+border:none;
+outline:none;
+}
+
+/* SEARCH BOX ANIMATION */
+.search-box{
+position:relative;
+}
+
+.search-box input{
+padding-right:40px;
+transition:0.3s;
+}
+
+.search-box input:focus{
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+transform:scale(1.05);
+}
+
+.search-icon{
+position:absolute;
+right:10px;
+top:50%;
+transform:translateY(-50%);
+cursor:pointer;
+}
+
+/* BUTTONS */
+button{
+padding:10px 15px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+transition:0.3s;
+}
+
+button:hover{
+transform:scale(1.05);
+}
+
+.export-btn{background:#4CAF50;color:#fff;}
+.search-btn{background:#2196F3;color:#fff;}
+.logout-btn{
+background:#ff4444;
+color:#fff;
+position:absolute;
+top:80px;
+right:20px;
+}
+
+/* TABLE */
+table{
+margin:auto;
+border-collapse:collapse;
+background:#fff;
+border-radius:10px;
+overflow:hidden;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+width:90%;
+animation:fadeIn 0.5s;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:12px;
+}
+
+th{
+background:#4CAF50;
+color:#fff;
+}
+
+tr:nth-child(even){
+background:#f2f2f2;
+}
+
+/* ROW ANIMATION */
+tr{
+animation:slideUp 0.4s ease;
+}
+
+@keyframes slideUp{
+from{opacity:0; transform:translateY(10px);}
+to{opacity:1; transform:translateY(0);}
+}
+
+/* NO DATA */
+.no-data{
+padding:20px;
+color:#999;
+}
+
+/* MOBILE */
+@media (max-width:600px){
+table{display:block;overflow-x:auto;}
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="header">Exam Registration</div>
+
+<button class="logout-btn" onclick="logout()">Logout</button>
+
+<h2>Admin Dashboard</h2>
+
+<div class="controls">
+
+<div class="search-box">
+<input type="text" id="search" placeholder="Search...">
+<span class="search-icon">🔍</span>
+</div>
+
+<button class="search-btn" onclick="filterData()">Search</button>
+
+<select id="examFilter">
+<option value="">All Exams</option>
+<option value="JEE">JEE</option>
+<option value="NEET">NEET</option>
+<option value="GOVT">GOVT</option>
+</select>
+
+<select id="statusFilter">
+<option value="">All Status</option>
+<option value="12th Completed">12th Completed</option>
+<option value="Graduated">Graduated</option>
+<option value="Post Graduated">Post Graduated</option>
+</select>
+
+<button class="export-btn" onclick="exportExcel()">Export Excel</button>
+
+</div>
+
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Email</th>
+<th>Age</th>
+<th>Mobile</th>
+<th>Status</th>
+<th>Exam</th>
+<th>Category</th>
+</tr>
+</thead>
+
+<tbody id="table"></tbody>
+</table>
+
+<script>
+
+let data = JSON.parse(localStorage.getItem("data")) || [];
+let table = document.getElementById("table");
+
+/* RENDER */
+function renderTable(filteredData){
+
+table.innerHTML = "";
+
+if(filteredData.length === 0){
+table.innerHTML = `<tr><td colspan="7" class="no-data">No Data Found</td></tr>`;
+return;
+}
+
+filteredData.forEach(d=>{
+let row = `<tr>
+<td>${d.name}</td>
+<td>${d.email}</td>
+<td>${d.age}</td>
+<td>${d.mobile}</td>
+<td>${d.status}</td>
+<td>${d.exam}</td>
+<td>${d.category || ''}</td>
+</tr>`;
+table.innerHTML += row;
+});
+}
+
+renderTable(data);
+
+/* FILTER FUNCTION */
+function filterData(){
+
+let search = document.getElementById("search").value.toLowerCase().trim();
+let exam = document.getElementById("examFilter").value.trim();
+let status = document.getElementById("statusFilter").value.trim();
+
+let filtered = data.filter(d => {
+
+let name = (d.name || "").toLowerCase();
+let email = (d.email || "").toLowerCase();
+let mobile = (d.mobile || "").toString();
+
+let matchSearch =
+name.includes(search) ||
+email.includes(search) ||
+mobile.includes(search);
+
+let matchExam =
+exam === "" || (d.exam && d.exam.trim() === exam);
+
+let matchStatus =
+status === "" || (d.status && d.status.trim() === status);
+
+return matchSearch && matchExam && matchStatus;
+
+});
+
+renderTable(filtered);
+}
+
+/* 🔥 LIVE SEARCH (AUTO FILTER WHILE TYPING) */
+document.getElementById("search").addEventListener("keyup", ()=>{
+filterData();
+});
+
+/* EXPORT */
+function exportExcel(){
+
+let csv = "Name,Email,Age,Mobile,Status,Exam,Category\n";
+
+data.forEach(d=>{
+csv += `${d.name},${d.email},${d.age},${d.mobile},${d.status},${d.exam},${d.category || ''}\n`;
+});
+
+let blob = new Blob([csv], { type: "text/csv" });
+let link = document.createElement("a");
+
+link.href = URL.createObjectURL(blob);
+link.download = "students_data.csv";
+
+link.click();
+}
+
+function logout(){
+window.location="index.html";
+}
+
+</script>
+
+</body>
+</html>

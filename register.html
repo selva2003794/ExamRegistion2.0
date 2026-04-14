@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            color: white;
+        }
+
+        .box {
+            width: 500px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(15px);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        .exam {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #ffd369;
+        }
+
+        input,
+        select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            outline: none;
+            font-size: 15px;
+        }
+
+        input:focus,
+        select:focus {
+            transform: scale(1.03);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        input[type="file"] {
+            background: white;
+            color: black;
+        }
+
+        button {
+            width: 100%;
+            padding: 12px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            background: linear-gradient(45deg, #00c6ff, #0072ff);
+            color: white;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+        }
+
+        .leave {
+            background: linear-gradient(45deg, #ff4b5c, #c70039);
+        }
+
+        button.loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-box {
+            background: white;
+            color: black;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            width: 300px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="box">
+
+        <h2>📝 Exam Registration</h2>
+        <p id="examName" class="exam"></p>
+
+        <input type="text" id="name" placeholder="Full Name">
+        <input type="email" id="email" placeholder="Email">
+        <input type="number" id="age" placeholder="Age">
+        <input type="tel" id="mobile" placeholder="Mobile Number">
+        <input type="date" id="dob">
+
+        <select id="gender">
+            <option value="">Select Gender</option>
+            <option>Male</option>
+            <option>Female</option>
+        </select>
+
+        <!-- EXAM CENTRE DROPDOWN -->
+        <select id="centre" onchange="setAddress()">
+            <option value="">Select Exam Centre</option>
+            <option value="ABC College">ABC College</option>
+            <option value="XYZ Institute">XYZ Institute</option>
+            <option value="SRM University">SRM University</option>
+        </select>
+
+        <!-- AUTO ADDRESS -->
+        <input type="text" id="address" placeholder="Centre Address" readonly>
+
+        <select id="status">
+            <option value="">Select Status</option>
+            <option>12th Completed</option>
+            <option>Graduated</option>
+            <option>Post Graduated</option>
+        </select>
+
+        <!-- CATEGORY -->
+        <select id="category" style="display:none;">
+            <option value="">Select GOVT Category</option>
+            <option>Group 1</option>
+            <option>Group 2</option>
+            <option>Group 4</option>
+            <option>Group 4A</option>
+        </select>
+
+        <select id="jeeCategory" style="display:none;">
+            <option value="">Select JEE Category</option>
+            <option>Main</option>
+            <option>Advance</option>
+        </select>
+
+        <select id="neetCategory" style="display:none;">
+            <option value="">Select NEET Category</option>
+            <option>Main</option>
+            <option>Advance</option>
+        </select>
+
+        <input type="file" id="photo" accept="image/*">
+
+        <button id="submitBtn" onclick="register()">Submit</button>
+        <button class="leave" onclick="leave()">Cancel</button>
+
+    </div>
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+        <div class="modal-box">
+            <h3 id="modalTitle"></h3>
+            <p id="modalMessage"></p>
+            <button onclick="closeModal()">OK</button>
+        </div>
+    </div>
+
+    <script>
+
+        let exam = localStorage.getItem("exam");
+        document.getElementById("examName").innerText = "Exam: " + exam;
+
+        /* SHOW CATEGORY */
+        if (exam == "GOVT") {
+            document.getElementById("category").style.display = "block";
+        }
+        else if (exam == "JEE") {
+            document.getElementById("jeeCategory").style.display = "block";
+        }
+        else if (exam == "NEET") {
+            document.getElementById("neetCategory").style.display = "block";
+        }
+
+        /* AUTO ADDRESS */
+        function setAddress() {
+            let centre = document.getElementById("centre").value;
+            let address = document.getElementById("address");
+
+            if (centre === "ABC College") {
+                address.value = "Chennai, Tamil Nadu";
+            }
+            else if (centre === "XYZ Institute") {
+                address.value = "Bangalore, Karnataka";
+            }
+            else if (centre === "SRM University") {
+                address.value = "Kattankulathur, Chennai";
+            }
+            else {
+                address.value = "";
+            }
+        }
+
+        /* REGISTER */
+        function register() {
+
+            let btn = document.getElementById("submitBtn");
+            btn.classList.add("loading");
+            btn.innerText = "Processing...";
+
+            let name = document.getElementById("name").value.trim();
+            let email = document.getElementById("email").value.trim();
+            let age = document.getElementById("age").value;
+            let mobile = document.getElementById("mobile").value.trim();
+            let status = document.getElementById("status").value;
+            let photoInput = document.getElementById("photo");
+            let dob = document.getElementById("dob").value;
+            let gender = document.getElementById("gender").value;
+            let centre = document.getElementById("centre").value;
+            let address = document.getElementById("address").value;
+
+            let category = "";
+
+            /* FIX: ensure button resets on error */
+            function fail(msg) {
+                showError(msg);
+                return false;
+            }
+
+            if (!name || !email || !age || !mobile || !status || !centre) {
+                return fail("Fill all fields");
+            }
+
+            if (photoInput.files.length == 0) {
+                return fail("Upload photo");
+            }
+
+            if (age < 18) {
+                return fail("Must be 18+");
+            }
+
+            if (exam == "GOVT") {
+                category = document.getElementById("category").value;
+                if (!category) return fail("Select category");
+            }
+
+            if (exam == "JEE") {
+                category = document.getElementById("jeeCategory").value;
+                if (!category) return fail("Select category");
+            }
+
+            if (exam == "NEET") {
+                category = document.getElementById("neetCategory").value;
+                if (!category) return fail("Select category");
+            }
+
+            let reader = new FileReader();
+
+            reader.onload = function () {
+
+                let photo = reader.result;
+
+                let data = JSON.parse(localStorage.getItem("data")) || [];
+
+                let userData = {
+                    name, email, exam, age, mobile, status, category, photo,
+                    dob, gender, centre, address
+                };
+
+                data.push(userData);
+
+                localStorage.setItem("data", JSON.stringify(data));
+                localStorage.setItem("currentUser", JSON.stringify(userData));
+
+                showSuccess("Registered Successfully!");
+            };
+
+            /* FIX: handle file read error */
+            reader.onerror = function () {
+                fail("Error reading photo");
+            };
+
+            reader.readAsDataURL(photoInput.files[0]);
+        }
+
+        /* ERROR */
+        function showError(msg) {
+            resetBtn(); // already correct
+            document.getElementById("modalTitle").innerText = "Error";
+            document.getElementById("modalMessage").innerText = msg;
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        /* SUCCESS */
+        function showSuccess(msg) {
+            resetBtn(); // ✅ FIX ADDED (important)
+            document.getElementById("modalTitle").innerText = "Success";
+            document.getElementById("modalMessage").innerText = msg;
+            document.getElementById("modal").style.display = "flex";
+        }
+
+        function closeModal() {
+            document.getElementById("modal").style.display = "none";
+            if (document.getElementById("modalTitle").innerText == "Success") {
+                window.location = "student.html";
+            }
+            resetBtn();
+        }
+
+        function resetBtn() {
+            let btn = document.getElementById("submitBtn");
+            btn.classList.remove("loading");
+            btn.innerText = "Submit";
+        }
+
+        function leave() {
+            window.location = "student.html";
+        }
+
+    </script>
+
+</body>
+
+</html>
