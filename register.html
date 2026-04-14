@@ -225,7 +225,7 @@
         }
 
         /* REGISTER */
-        function register() {
+        async function register() {
 
             let btn = document.getElementById("submitBtn");
             btn.classList.add("loading");
@@ -247,7 +247,7 @@
             /* FIX: ensure button resets on error */
             function fail(msg) {
                 showError(msg);
-                return false;
+                return;
             }
 
             if (!name || !email || !age || !mobile || !status || !centre) {
@@ -277,12 +277,18 @@
                 if (!category) return fail("Select category");
             }
 
-            let reader = new FileReader();
-            let loaded = false;
+            // Helper function to read file as Data URL
+            function readFileAsDataURL(file) {
+                return new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(new Error('Error reading photo'));
+                    reader.readAsDataURL(file);
+                });
+            }
 
-            reader.onload = function () {
-                loaded = true;
-                let photo = reader.result;
+            try {
+                let photo = await readFileAsDataURL(photoInput.files[0]);
 
                 let data = JSON.parse(localStorage.getItem("data")) || [];
 
@@ -297,22 +303,9 @@
                 localStorage.setItem("currentUser", JSON.stringify(userData));
 
                 showSuccess("Registered Successfully!");
-            };
-
-            /* FIX: handle file read error */
-            reader.onerror = function () {
-                loaded = true; // prevent timeout
-                fail("Error reading photo");
-            };
-
-            // Timeout in case file reading takes too long or fails silently
-            setTimeout(() => {
-                if (!loaded) {
-                    fail("File reading timed out. Please try a smaller image file.");
-                }
-            }, 10000); // 10 seconds timeout
-
-            reader.readAsDataURL(photoInput.files[0]);
+            } catch (error) {
+                fail("Error reading photo. Please try a different image file.");
+            }
         }
 
         /* ERROR */
